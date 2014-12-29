@@ -1,0 +1,299 @@
+<html>
+<!DOCTYPE html> 	
+<meta http-equiv="Access-Control-Allow-Origin" content="*">
+<meta charset="utf-8">
+<title> EQUIPE AVES - ESTAÇÃO METEOROLOGICA</title>
+<head>
+
+<center>
+	<p><img alt="EQUIPE AVES" src="aves.png" style="line-height: 20.8px; float: top; width: 100px; height: 100px;" /></p>
+
+	<h1>&nbsp;</h1>
+	<h1>EQUIPE AVES - 2014</h1>
+	<h1>&nbsp;</h1>
+
+</center>
+<style>
+
+
+body {
+  font: 12px arial;
+ }
+
+ 
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+   stroke-width: 3px;
+}
+
+.x.axis path {
+  
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 3px;
+}
+
+.grid .tick {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    shape-rendering: crispEdges;
+}
+.grid path {
+          stroke-width: 0;
+}
+
+.area {
+    fill: white;
+
+}
+#minhaDiv{
+ 
+}
+
+
+</style>
+
+</head>
+
+<script src="d3.v3.js"></script>
+
+
+
+<body>
+
+
+<script>
+
+
+
+
+
+var temperatura = "A.CSV";
+var pressao = "B.CSV";
+var altitude = "C.CSV";
+var realAltitude = "D.CSV";
+
+var temperatura2 = "F.CSV";
+var umidade = "F.CSV";
+
+
+
+
+var margin = {top: 50, right: 50, bottom: 50, left: 100},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var parseDate = d3.time.format("%L").parse;
+
+var x = d3.time.scale()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom")
+    .ticks(10);
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left")
+    .ticks(20);
+   
+
+var area = d3.svg.area()
+    .x(function(d) { return x(d.date); })
+    .y0(height)
+    .y1(function(d) { return y(d.close); });
+
+var line = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.close); });
+
+function make_x_axis() {
+    return d3.svg.axis()
+        .scale(x)
+        .orient("bottom")
+        .ticks(20)
+}
+
+// function for the y grid lines
+function make_y_axis() {
+  return d3.svg.axis()
+      .scale(y)
+      .orient("left")
+      .ticks(20)
+}
+
+
+
+
+var myDiv = d3.select("body").append("div");
+/*
+function updateData(arquivo,svg1) {
+
+    // Get the data again
+    d3.csv(arquivo, function(error, data) {
+       	data.forEach(function(d) {
+	    	//d.date = parseDate(d.date);
+	    	d.close = +d.close;
+	    });
+
+    	// Scale the range of the data again 
+    	x.domain(d3.extent(data, function(d) { return d.date; }));
+	    y.domain([0, d3.max(data, function(d) { return d.close; })]);
+
+
+    // Make the changes
+        svg1.select(".line")   // change the line
+            .duration(750)
+            .attr("d", valueline(data));
+        svg1.select(".x.axis") // change the x axis
+            .duration(750)
+            .call(xAxis);
+        svg1.select(".y.axis") // change the y axis
+            .duration(750)
+            .call(yAxis);
+
+    });
+}
+*/
+
+
+
+function getGraphLine(arquivo,nameSensor, UnidadeSensor) {
+
+myDiv.append("hr");
+
+var titulo = myDiv.append("h1")
+	.attr("font",12)
+	.html(nameSensor);
+
+	
+	
+var svg = myDiv.append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.csv(arquivo, function(error, data) {
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.close = +d.close ;
+  });
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+  y.domain(d3.extent(data, function(d) { return d.close; }));
+	
+ // Add the filled area
+    svg.append("path")
+        .datum(data)
+        .attr("class", "area")
+        .attr("d", area);
+
+ svg.append("path")
+      .datum(data)
+      .attr("class", "line")
+      .attr("d", line);
+
+	  
+	  
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+	.append("text")      
+      .attr("x",height*2 )
+      .attr("y", -5)
+      .attr("dx", ".71em")
+      .style("text-anchor", "end")
+      .text("TEMPO");	
+
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 10)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text(nameSensor+UnidadeSensor);
+
+ 
+	 // Draw the x Grid lines
+    svg.append("g")
+        .attr("class", "grid")
+        .attr("transform", "translate(0," + height + ")")
+        .call(make_x_axis()
+            .tickSize(-height, 0, 0)
+            .tickFormat("")
+        )
+
+    // Draw the y Grid lines
+    svg.append("g")            
+        .attr("class", "grid")
+        .call(make_y_axis()
+            .tickSize(-width, 0, 0)
+            .tickFormat("")
+        )
+		
+		
+		/*
+		// Make the changes
+        svg.select(".line")   // change the line
+            .duration(750)
+            .attr("d", valueline(data));
+        svg.select(".x.axis") // change the x axis
+            .duration(750)
+            .call(xAxis);
+        svg.select(".y.axis") // change the y axis
+            .duration(750)
+            .call(yAxis);
+			*/
+});
+
+
+}
+/*
+var inter = setInterval(function() {
+           //     getGraphLine(temperatura,"TEMPERATURA","(ºC)");
+        }, 100); 
+*/	
+		
+
+getGraphLine(temperatura,"TEMPERATURA BAROMETRO","(ºC)");
+
+getGraphLine(pressao,"PRESSÃO ATMOSFÉRICA","(hPA)");
+
+getGraphLine(altitude,"ALTITUDE","(m)");
+
+getGraphLine(realAltitude,"ALTITUDE RELATIVA","(m)");
+
+getGraphLine(temperatura2,"TEMPERATURA DHT","(°C)");
+
+getGraphLine(umidade,"UMIDADE RELATIVA","(%)");
+
+
+
+
+</script>
+
+
+
+</body>
+
+
+
+
+
+</html>
